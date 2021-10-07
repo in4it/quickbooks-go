@@ -22,9 +22,9 @@ type Invoice struct {
 	//DepartmentRef
 	PrivateNote string `json:",omitempty"`
 	//LinkedTxn
-	Line         []Line
-	TxnTaxDetail TxnTaxDetail `json:",omitempty"`
-	CustomerRef  ReferenceType
+	Line         []Line          `json:",omitempty"`
+	TxnTaxDetail TxnTaxDetail    `json:",omitempty"`
+	CustomerRef  ReferenceType   `json:",omitempty"`
 	CustomerMemo MemoRef         `json:",omitempty"`
 	BillAddr     PhysicalAddress `json:",omitempty"`
 	ShipAddr     PhysicalAddress `json:",omitempty"`
