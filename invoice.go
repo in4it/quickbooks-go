@@ -276,3 +276,55 @@ func (c *Client) DeleteInvoice(id, syncToken string) error {
 	// TODO they send something back, but is it useful?
 	return nil
 }
+
+// UpdateInvoice updates the given Invoice on the QuickBooks server,
+// returning the resulting Invoice object. It's a sparse update, as not all QB
+// fields are present in our Invoice object.
+func (c *Client) UpdateInvoice(invoice *Invoice, syncToken string) (*Invoice, error) {
+	var u, err = url.Parse(string(c.Endpoint))
+	if err != nil {
+		return nil, err
+	}
+	u.Path = "/v3/company/" + c.RealmID + "/invoice"
+	var v = url.Values{}
+	v.Add("minorversion", minorVersion)
+	u.RawQuery = v.Encode()
+	var d = struct {
+		*Invoice
+		Sparse    bool `json:"sparse"`
+		SyncToken string
+	}{
+		Invoice:   invoice,
+		Sparse:    true,
+		SyncToken: syncToken,
+	}
+	var j []byte
+	j, err = json.Marshal(d)
+	if err != nil {
+		return nil, err
+	}
+	var req *http.Request
+	req, err = http.NewRequest("POST", u.String(), bytes.NewBuffer(j))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	var res *http.Response
+	res, err = c.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, parseFailure(res)
+	}
+
+	var r struct {
+		Invoice Invoice
+		Time    Date
+	}
+	err = json.NewDecoder(res.Body).Decode(&r)
+	return &r.Invoice, err
+}
