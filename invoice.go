@@ -55,6 +55,50 @@ type Invoice struct {
 	DepositToAccountRef          ReferenceType `json:",omitempty"`
 }
 
+// Invoice struct for sparse updates
+type SparseInvoice struct {
+	ID        string    `json:"Id,omitempty"`
+	SyncToken string    `json:",omitempty"`
+	MetaData  *MetaData `json:",omitempty"`
+	//CustomField
+	DocNumber string `json:",omitempty"`
+	TxnDate   *Date  `json:",omitempty"`
+	//DepartmentRef
+	PrivateNote string `json:",omitempty"`
+	//LinkedTxn
+	Line         []Line           `json:",omitempty"`
+	TxnTaxDetail *TxnTaxDetail    `json:",omitempty"`
+	CustomerRef  *ReferenceType   `json:",omitempty"`
+	CustomerMemo *MemoRef         `json:",omitempty"`
+	BillAddr     *PhysicalAddress `json:",omitempty"`
+	ShipAddr     *PhysicalAddress `json:",omitempty"`
+	ClassRef     *ReferenceType   `json:",omitempty"`
+	SalesTermRef *ReferenceType   `json:",omitempty"`
+	DueDate      *Date            `json:",omitempty"`
+	//GlobalTaxCalculation
+	ShipMethodRef *ReferenceType `json:",omitempty"`
+	ShipDate      *Date          `json:",omitempty"`
+	TrackingNum   string         `json:",omitempty"`
+	TotalAmt      json.Number    `json:",omitempty"`
+	//CurrencyRef
+	ExchangeRate          json.Number   `json:",omitempty"`
+	HomeAmtTotal          json.Number   `json:",omitempty"`
+	HomeBalance           json.Number   `json:",omitempty"`
+	ApplyTaxAfterDiscount bool          `json:",omitempty"`
+	PrintStatus           string        `json:",omitempty"`
+	EmailStatus           string        `json:",omitempty"`
+	BillEmail             *EmailAddress `json:",omitempty"`
+	BillEmailCC           *EmailAddress `json:"BillEmailCc,omitempty"`
+	BillEmailBCC          *EmailAddress `json:"BillEmailBcc,omitempty"`
+	//DeliveryInfo
+	Balance                      json.Number    `json:",omitempty"`
+	TxnSource                    string         `json:",omitempty"`
+	AllowOnlineCreditCardPayment bool           `json:",omitempty"`
+	AllowOnlineACHPayment        bool           `json:",omitempty"`
+	Deposit                      json.Number    `json:",omitempty"`
+	DepositToAccountRef          *ReferenceType `json:",omitempty"`
+}
+
 // TxnTaxDetail ...
 type TxnTaxDetail struct {
 	TxnTaxCodeRef ReferenceType `json:",omitempty"`
@@ -280,7 +324,7 @@ func (c *Client) DeleteInvoice(id, syncToken string) error {
 // UpdateInvoice updates the given Invoice on the QuickBooks server,
 // returning the resulting Invoice object. It's a sparse update, as not all QB
 // fields are present in our Invoice object.
-func (c *Client) UpdateInvoice(invoice *Invoice, syncToken string) (*Invoice, error) {
+func (c *Client) UpdateInvoice(invoice *SparseInvoice, syncToken string) (*Invoice, error) {
 	var u, err = url.Parse(string(c.Endpoint))
 	if err != nil {
 		return nil, err
@@ -290,13 +334,13 @@ func (c *Client) UpdateInvoice(invoice *Invoice, syncToken string) (*Invoice, er
 	v.Add("minorversion", minorVersion)
 	u.RawQuery = v.Encode()
 	var d = struct {
-		*Invoice
+		*SparseInvoice
 		Sparse    bool `json:"sparse"`
 		SyncToken string
 	}{
-		Invoice:   invoice,
-		Sparse:    true,
-		SyncToken: syncToken,
+		SparseInvoice: invoice,
+		Sparse:        true,
+		SyncToken:     syncToken,
 	}
 	var j []byte
 	j, err = json.Marshal(d)
