@@ -51,6 +51,7 @@ type Customer struct {
 	OpenBalanceDate Date        `json:",omitempty"`
 	BalanceWithJobs json.Number `json:",omitempty"`
 	//CurrencyRef
+	PrimaryTaxIdentifier null.String `json:",omitempty"`
 }
 
 // GetAddress prioritizes the ship address, but falls back on bill address
